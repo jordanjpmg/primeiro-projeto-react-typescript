@@ -1,58 +1,63 @@
-import React from 'react';
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
+import api from '../../services/api';
 
 import logo from '../../assets/logo.svg';
 
 import { Title, Form, Repositories } from './styles';
 
-const Dashboard: React.FC = () => (
-  <>
-    <img src={logo} alt="Logo Github Explorer" />
-    <Title>Explore Repositórios no GitHub</Title>
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
 
-    <Form>
-      <input placeholder="digite o repositorio" />
-      <button type="submit">pesquisar</button>
-    </Form>
+const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setrepositories] = useState<Repository[]>([]);
 
-    <Repositories>
-      <a href="teste">
-        <img
-          src="https://avatars0.githubusercontent.com/u/28022906?s=460&u=5127227cc308058052620366d959e79b53fa49de&v=4"
-          alt="Foto Perfil do Github"
+  async function handleAddRepository(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+    const response = await api.get(`repos/${newRepo}`);
+    const repository = response.data;
+    setrepositories([...repositories, repository]);
+  }
+  return (
+    <>
+      <img src={logo} alt="Logo Github Explorer" />
+      <Title>Explore Repositórios no GitHub</Title>
+
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={e => setNewRepo(e.target.value)}
+          placeholder="digite o repositorio"
         />
-        <div>
-          <strong>primeiro-projeto-react-typescript</strong>
-          <p>Projeto ReactJS usando TypeScriptas</p>
-        </div>
-        <FiChevronRight />
-      </a>
+        <button type="submit">pesquisar</button>
+      </Form>
 
-      <a href="teste">
-        <img
-          src="https://avatars0.githubusercontent.com/u/28022906?s=460&u=5127227cc308058052620366d959e79b53fa49de&v=4"
-          alt="Foto Perfil do Github"
-        />
-        <div>
-          <strong>primeiro-projeto-react-typescript</strong>
-          <p>Projeto ReactJS usando TypeScriptas</p>
-        </div>
-        <FiChevronRight />
-      </a>
-
-      <a href="teste">
-        <img
-          src="https://avatars0.githubusercontent.com/u/28022906?s=460&u=5127227cc308058052620366d959e79b53fa49de&v=4"
-          alt="Foto Perfil do Github"
-        />
-        <div>
-          <strong>primeiro-projeto-react-typescript</strong>
-          <p>Projeto ReactJS usando TypeScriptas</p>
-        </div>
-        <FiChevronRight />
-      </a>
-    </Repositories>
-  </>
-);
+      <Repositories>
+        {repositories.map(repository => (
+          <a key={repository.full_name} href="teste">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
+            <FiChevronRight />
+          </a>
+        ))}
+      </Repositories>
+    </>
+  );
+};
 
 export default Dashboard;
